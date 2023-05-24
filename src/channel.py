@@ -17,9 +17,16 @@ class Channel:
     def __init__(self, channel_id: str) -> None:
         """Экземпляр инициализируется id канала. Дальше все данные будут подтягиваться по API."""
         self.channel_id = channel_id
+        self.title = ''
+        self.description = ''
+        self.url = ''
+        self.subscriber_count = ''
+        self.video_count = ''
+        self.view_count = ''
+        self._get_channel_info()
 
-    def print_info(self) -> None:
-        """Выводит в консоль информацию о канале."""
+    def _get_channel_info(self) -> None:
+        """Получает информацию о канале и заполняет атрибуты экземпляра."""
         response = self.youtube.channels().list(
             part='snippet,statistics',
             id=self.channel_id
@@ -27,8 +34,29 @@ class Channel:
 
         channel = response['items'][0]
 
-        print('Название канала:', channel['snippet']['title'])
-        print('Описание:', channel['snippet']['description'])
-        print('Количество подписчиков:', channel['statistics']['subscriberCount'])
-        print('Количество просмотров:', channel['statistics']['viewCount'])
+        self.title = channel['snippet']['title']
+        self.description = channel['snippet']['description']
+        self.url = f"https://www.youtube.com/channel/{self.channel_id}"
+        self.subscriber_count = channel['statistics']['subscriberCount']
+        self.video_count = channel['statistics']['videoCount']
+        self.view_count = channel['statistics']['viewCount']
 
+    @classmethod
+    def get_service(cls):
+        """Возвращает объект для работы с YouTube API."""
+        return cls.youtube
+
+    def to_json(self, filename: str) -> None:
+        """Сохраняет значения атрибутов экземпляра в файл в формате JSON."""
+        data = {
+            'channel_id': self.channel_id,
+            'title': self.title,
+            'description': self.description,
+            'url': self.url,
+            'subscriber_count': self.subscriber_count,
+            'video_count': self.video_count,
+            'view_count': self.view_count
+        }
+
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
